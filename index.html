@@ -115,6 +115,22 @@ svg.map{display:block;width:100%;height:auto;max-height:70vh}
 .ramp span.s i{width:22px;height:12px;display:block}
 .ticks{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);width:88px;margin-left:0}
 
+.xp-head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;justify-content:space-between;margin-bottom:12px}
+.xp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px 20px}
+.xp-g{min-width:0}
+.xp-g h3{font-size:1rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;color:var(--muted)}
+.xp-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:2px 10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:.88rem;align-items:center}
+.xp-row .nm{overflow-wrap:anywhere}
+.xp-row .sh{color:var(--muted);font-size:.78rem}
+.xp-split{display:flex;height:10px;border-radius:2px;overflow:hidden;background:var(--line)}
+.xp-split i{display:block;height:100%}
+.xp-split i.d{background:var(--dem)} .xp-split i.r{background:var(--rep)}
+.xp-nums{display:flex;justify-content:space-between;font-size:.8rem}
+.xp-key{display:flex;gap:14px;font-size:.82rem;color:var(--muted)}
+.method{margin-top:16px;padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:4px;font-size:.88rem}
+.method h3{font-size:.95rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.method ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px;color:var(--muted)}
+.method b{color:var(--ink);font-weight:600}
 .src-list{display:flex;flex-direction:column;gap:12px;margin:12px 0 0;padding:0;list-style:none}
 .src-list li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
 .src-list li:last-child{border-bottom:0;padding-bottom:0}
@@ -163,6 +179,25 @@ svg.map{display:block;width:100%;height:auto;max-height:70vh}
     </section>
   </div>
 
+  <section class="card" id="exitpoll">
+    <div class="xp-head">
+      <div><h2>Who voted how: exit polls</h2><p class="sub">Edison Research exit poll results for Florida, as published by CNN. Each row shows how a group split between the two main candidates and how much of the electorate it made up.</p></div>
+      <div class="ctl"><label for="selExit">Exit poll election</label><select id="selExit"></select></div>
+    </div>
+    <div class="xp-key" id="xpKey"></div>
+    <div class="xp-grid" id="xpGrid"></div>
+    <div class="method">
+      <h3>How this data is handled</h3>
+      <ul>
+        <li><b>Weighted:</b> Yes. These are the published crosstabs, which the pollster has already weighted. The 2020 total row (Biden 47.86, Trump 51.22) matches the actual Florida result. I did not re-weight anything.</li>
+        <li><b>Sample sizes:</b> The tables I could retrieve show only each group's share of voters, not respondent counts, so nothing here can be re-weighted from the raw sample.</li>
+        <li><b>Florida only:</b> This is a Florida electorate. It should not be read as a national picture.</li>
+        <li><b>Not included:</b> A 2026 Florida exit poll was not available when I checked. The 2026 table on Wikipedia is a commented-out placeholder borrowed from another state, so I left it out. I also could not retrieve 2022 or 2024 Florida crosstabs.</li>
+        <li>Small groups can be marked n/a where the pollster judged the sample too small.</li>
+      </ul>
+    </div>
+  </section>
+
   <section class="card">
     <h2>Sources to verify</h2>
     <p class="chk" id="check"></p>
@@ -198,6 +233,7 @@ const SOURCES = [
   {k:"2020 President",links:[["Florida Division of Elections, official results archive","https://results.elections.myflorida.com/Index.asp?ElectionDate=11/3/2020&DATAMODE="],["Wikipedia county table","https://en.wikipedia.org/wiki/2020_United_States_presidential_election_in_Florida"]]},
   {k:"2018 Governor",links:[["Florida Division of Elections, official results archive","https://results.elections.myflorida.com/Index.asp?ElectionDate=11/6/2018&DATAMODE="],["Wikipedia county table","https://en.wikipedia.org/wiki/2018_Florida_gubernatorial_election"]]},
   {k:"2018 Senate",links:[["Florida Division of Elections, official results archive","https://results.elections.myflorida.com/Index.asp?ElectionDate=11/6/2018&DATAMODE="],["Wikipedia county table","https://en.wikipedia.org/wiki/2018_United_States_Senate_election_in_Florida"]]},
+  {k:"Exit polls",links:[["CNN 2020 Florida President exit poll","https://www.cnn.com/election/2020/exit-polls/president/florida"],["CNN 2018 Florida Governor exit poll","https://www.cnn.com/election/2018/exit-polls/florida"],["CNN 2018 Florida Senate exit poll","https://www.cnn.com/election/2018/exit-polls/florida/senate"],["Wikipedia: 2020 President in Florida, Edison table","https://en.wikipedia.org/wiki/2020_United_States_presidential_election_in_Florida"],["Wikipedia: 2018 governor race, voter demographics","https://en.wikipedia.org/wiki/2018_Florida_gubernatorial_election"],["Wikipedia: 2018 Senate race, Edison exit poll","https://en.wikipedia.org/wiki/2018_United_States_Senate_election_in_Florida"]]},
   {k:"County outlines",links:[["US Census county shapes via us-atlas","https://github.com/topojson/us-atlas"]]}
 ];
 
@@ -312,4 +348,20 @@ $("selCmp").addEventListener("change",e=>{cmp=e.target.value; mode="shift"; rend
 $("btnLead").addEventListener("click",()=>{mode="lead"; render();});
 $("btnShift").addEventListener("click",()=>{mode="shift"; render();});
 buildMap(); renderSources(); render();
+const EXIT = {"pres20":[{"g":"Ideology","rows":[["Liberals",83.0,16.0,19.0],["Moderates",59.0,40.0,42.0],["Conservatives",16.0,83.0,39.0]]},{"g":"Party","rows":[["Democrats",94.0,5.0,30.0],["Republicans",7.0,93.0,38.0],["Independents",54.0,43.0,32.0]]},{"g":"Gender","rows":[["Men",45.0,54.0,45.0],["Women",51.0,48.0,55.0]]},{"g":"Race/ethnicity","rows":[["White",37.0,62.0,62.0],["Black",89.0,10.0,14.0],["Latino",53.0,46.0,19.0],["Asian",null,null,1.0],["Other",55.0,44.0,3.0]]},{"g":"Age","rows":[["18\u201324 years old",57.0,42.0,7.0],["25\u201329 years old",64.0,35.0,6.0],["30\u201339 years old",48.0,50.0,13.0],["40\u201349 years old",48.0,51.0,13.0],["50\u201364 years old",45.0,54.0,28.0],["65 and older",45.0,55.0,32.0]]},{"g":"Sexual orientation","rows":[["LGBT",83.0,15.0,6.0],["Not LGBT",46.0,53.0,94.0]]},{"g":"Education","rows":[["High school or less",44.0,56.0,19.0],["Some college education",50.0,49.0,25.0],["Associate degree",45.0,53.0,20.0],["Bachelor's degree",49.0,50.0,22.0],["Postgraduate degree",53.0,45.0,14.0]]},{"g":"Issue regarded as most important","rows":[["Racial inequality",86.0,12.0,13.0],["Coronavirus",88.0,10.0,18.0],["Economy",13.0,87.0,38.0],["Crime and safety",12.0,88.0,10.0],["Health care",83.0,16.0,13.0]]},{"g":"Region","rows":[["North/Panhandle",41.0,58.0,18.0],["Orlando/Central Atlantic",51.0,48.0,19.0],["Tampa Bay area",48.0,51.0,16.0],["Gulf Coast/Mid-Florida",39.0,60.0,20.0],["Miami/Gold Coast",58.0,41.0,27.0]]},{"g":"Area type","rows":[["Urban",55.0,44.0,41.0],["Suburban",44.0,55.0,50.0],["Rural",38.0,61.0,9.0]]},{"g":"Family's financial situation today","rows":[["Better than four years ago",18.0,81.0,44.0],["Worse than four years ago",84.0,15.0,19.0],["About the same",67.0,32.0,36.0]]}],"gov18":[{"g":"Gender","rows":[["Men",41.0,58.0,45.0],["Women",57.0,42.0,55.0]]},{"g":"Age","rows":[["18\u201324 years old",58.0,40.0,5.0],["25\u201329 years old",64.0,34.0,5.0],["30\u201339 years old",65.0,35.0,10.0],["40\u201349 years old",49.0,50.0,12.0],["50\u201364 years old",48.0,52.0,31.0],["65 and older",43.0,56.0,36.0]]},{"g":"Race","rows":[["White",39.0,60.0,66.0],["Black",86.0,14.0,13.0],["Latino",54.0,44.0,15.0],["Asian",null,null,2.0],["Other",65.0,33.0,4.0]]},{"g":"Race by gender","rows":[["White men",31.0,69.0,31.0],["White women",47.0,51.0,35.0],["Black men",91.0,8.0,6.0],["Black women",82.0,18.0,8.0],["Latino men",49.0,49.0,6.0],["Latina women",58.0,41.0,9.0],["Others",65.0,34.0,5.0]]},{"g":"Education","rows":[["High school or less",44.0,54.0,20.0],["Some college education",51.0,48.0,25.0],["Associate degree",47.0,51.0,15.0],["Bachelor's degree",47.0,52.0,24.0],["Advanced degree",57.0,42.0,16.0]]},{"g":"Education and race","rows":[["White college graduates",46.0,54.0,27.0],["White no college degree",34.0,64.0,39.0],["Non-white college graduates",61.0,38.0,12.0],["Non-white no college degree",73.0,26.0,22.0]]},{"g":"Whites by education and gender","rows":[["White women with college degrees",57.0,42.0,13.0],["White women without college degrees",41.0,58.0,28.0],["White men with college degrees",35.0,65.0,14.0],["White men without college degrees",26.0,73.0,17.0],["Non-whites",69.0,30.0,34.0]]},{"g":"Income","rows":[["Under $30,000",63.0,36.0,19.0],["$30,000\u201349,999",49.0,51.0,22.0],["$50,000\u201399,999",52.0,47.0,33.0],["$100,000\u2013199,999",50.0,50.0,19.0],["Over $200,000",null,null,7.0]]},{"g":"Party ID","rows":[["Democrats",93.0,7.0,33.0],["Republicans",7.0,92.0,38.0],["Independents",54.0,44.0,29.0]]},{"g":"Party by gender","rows":[["Democratic men",90.0,10.0,12.0],["Democratic women",95.0,5.0,21.0],["Republican men",7.0,93.0,19.0],["Republican women",7.0,90.0,18.0],["Independent men",50.0,49.0,14.0],["Independent women",58.0,39.0,16.0]]},{"g":"Ideology","rows":[["Liberals",90.0,9.0,22.0],["Moderates",61.0,38.0,39.0],["Conservatives",13.0,85.0,39.0]]},{"g":"Marital status","rows":[["Married",44.0,55.0,64.0],["Unmarried",56.0,42.0,36.0]]},{"g":"Gender by marital status","rows":[["Married men",34.0,65.0,32.0],["Married women",52.0,47.0,31.0],["Unmarried men",46.0,51.0,14.0],["Unmarried women",61.0,37.0,23.0]]},{"g":"First-time midterm election voter","rows":[["Yes",56.0,40.0,16.0],["No",47.0,53.0,84.0]]},{"g":"Most important issue facing the country","rows":[["Health care",74.0,25.0,40.0],["Immigration",18.0,80.0,30.0],["Economy",30.0,69.0,16.0],["Gun policy",77.0,23.0,10.0]]},{"g":"Area type","rows":[["Urban",57.0,42.0,42.0],["Suburban",45.0,53.0,50.0],["Rural",36.0,64.0,8.0]]}],"sen18":[{"g":"Gender","rows":[["Men",42.0,58.0,45.0],["Women",57.0,43.0,55.0]]},{"g":"Age","rows":[["18\u201324 years old",62.0,38.0,5.0],["25\u201329 years old",73.0,27.0,5.0],["30\u201339 years old",62.0,38.0,10.0],["40\u201349 years old",49.0,51.0,12.0],["50\u201364 years old",50.0,50.0,31.0],["65 and older",43.0,57.0,37.0]]},{"g":"Race","rows":[["White",40.0,60.0,66.0],["Black",90.0,10.0,13.0],["Latino",54.0,46.0,15.0],["Asian",null,null,2.0],["Other",67.0,33.0,4.0]]},{"g":"Race by gender","rows":[["White men",32.0,68.0,31.0],["White women",47.0,53.0,35.0],["Black men",88.0,12.0,6.0],["Black women",91.0,9.0,8.0],["Latino men",49.0,51.0,6.0],["Latina women",58.0,42.0,9.0],["Others",66.0,34.0,5.0]]},{"g":"Education","rows":[["High school or less",47.0,53.0,20.0],["Some college education",51.0,49.0,25.0],["Associate degree",47.0,53.0,15.0],["Bachelor's degree",48.0,52.0,24.0],["Advanced degree",58.0,42.0,16.0]]},{"g":"Education and race","rows":[["White college graduates",47.0,53.0,28.0],["White no college degree",35.0,65.0,38.0],["Non-white college graduates",64.0,36.0,12.0],["Non-white no college degree",74.0,26.0,22.0]]},{"g":"Whites by education and gender","rows":[["White women with college degrees",58.0,42.0,13.0],["White women without college degrees",40.0,60.0,22.0],["White men with college degrees",37.0,63.0,14.0],["White men without college degrees",27.0,73.0,17.0],["Non-whites",70.0,30.0,34.0]]},{"g":"Income","rows":[["Under $30,000",62.0,38.0,19.0],["$30,000\u201349,999",53.0,47.0,22.0],["$50,000\u201399,999",51.0,49.0,34.0],["$100,000\u2013199,999",48.0,52.0,19.0],["Over $200,000",null,null,7.0]]},{"g":"Party ID","rows":[["Democrats",92.0,8.0,33.0],["Republicans",9.0,91.0,37.0],["Independents",55.0,45.0,30.0]]},{"g":"Party by gender","rows":[["Democratic men",90.0,10.0,12.0],["Democratic women",93.0,7.0,21.0],["Republican men",7.0,93.0,19.0],["Republican women",11.0,89.0,18.0],["Independent men",50.0,50.0,14.0],["Independent women",60.0,40.0,16.0]]},{"g":"Ideology","rows":[["Liberals",89.0,11.0,22.0],["Moderates",62.0,38.0,39.0],["Conservatives",15.0,85.0,39.0]]},{"g":"Marital status","rows":[["Married",43.0,57.0,64.0],["Unmarried",59.0,41.0,36.0]]},{"g":"Gender by marital status","rows":[["Married men",36.0,64.0,32.0],["Married women",50.0,50.0,31.0],["Unmarried men",48.0,52.0,14.0],["Unmarried women",62.0,38.0,22.0]]},{"g":"First-time midterm election voter","rows":[["Yes",58.0,42.0,16.0],["No",47.0,53.0,84.0]]},{"g":"Most important issue facing the country","rows":[["Health care",75.0,25.0,41.0],["Immigration",17.0,83.0,29.0],["Economy",28.0,72.0,16.0],["Gun policy",76.0,24.0,11.0]]},{"g":"Area type","rows":[["Urban",56.0,44.0,42.0],["Suburban",47.0,53.0,50.0],["Rural",37.0,63.0,8.0]]}]};
+const EXMETA = {"pres20": {"label": "2020 President", "D": "Biden", "R": "Trump"}, "gov18": {"label": "2018 Governor", "D": "Gillum", "R": "DeSantis"}, "sen18": {"label": "2018 Senate", "D": "Nelson", "R": "Scott"}};
+let exSel = "pres20";
+function renderExit(){
+  const m=EXMETA[exSel];
+  $("selExit").innerHTML = Object.keys(EXMETA).map(k=>`<option value="${k}">${EXMETA[k].label}</option>`).join("");
+  $("selExit").value = exSel;
+  $("xpKey").innerHTML = `<span><span class="sw d"></span>${m.D} (D)</span><span><span class="sw r"></span>${m.R} (R)</span>`;
+  const f = v => v==null? "n/a" : Math.round(v)+"%";
+  $("xpGrid").innerHTML = EXIT[exSel].map(g=>`<div class="xp-g"><h3>${g.g}</h3>${g.rows.map(([n,d,r,s])=>{
+    const bar = (d==null||r==null)? `<div class="xp-split"></div>` : `<div class="xp-split" role="img" aria-label="${m.D} ${d} percent, ${m.R} ${r} percent"><i class="d" style="width:${d}%"></i><i class="r" style="width:${r}%"></i></div>`;
+    return `<div class="xp-row"><span class="nm">${n}</span><span class="sh num" style="text-align:right">${s==null?"":s+"% of voters"}</span><div style="grid-column:1/-1">${bar}<div class="xp-nums num"><span class="tag d">${f(d)}</span><span class="tag r">${f(r)}</span></div></div></div>`;}).join("")}</div>`).join("");
+}
+$("selExit").addEventListener("change",e=>{exSel=e.target.value; renderExit();});
+renderExit();
+
 </script>
