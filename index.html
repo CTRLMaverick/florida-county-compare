@@ -91,7 +91,7 @@ svg.map{display:block;width:100%;height:auto;max-height:70vh}
 .cty.on{stroke:var(--ink);stroke-width:2.2}
 .city circle{fill:var(--ink);stroke:var(--panel);stroke-width:1.5}
 .city text{font:600 12px var(--body);fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
-.hover{width:100%;min-height:13.5rem;margin-bottom:12px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:.86rem}
+.hover{width:100%;min-height:15rem;margin-bottom:12px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:.86rem}
 .hover h3{font-size:1.15rem;margin-bottom:4px}
 .hover .src{display:flex;justify-content:space-between;color:var(--muted);font-size:.72rem;margin-bottom:4px}
 .hover table td,.hover table th{padding:3px 0}
@@ -100,6 +100,13 @@ svg.map{display:block;width:100%;height:auto;max-height:70vh}
 .hover td:not(.cand){padding-left:8px}
 .sw{display:inline-block;width:3px;height:.9em;margin-right:6px;vertical-align:-1px}
 .sw.r{background:var(--rep)} .sw.d{background:var(--dem)} .sw.o{background:var(--muted)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px}
+.split .half{min-width:0}
+.split .half+.half{border-left:1px solid var(--line);padding-left:14px}
+@media (max-width:560px){.split{grid-template-columns:minmax(0,1fr);gap:12px}.split .half+.half{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:10px}}
+.role{font-size:.68rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.hm{margin-top:6px}
+.hover td.cand{white-space:normal}
 .hover .cmp{margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
 .legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .ramp{display:flex;flex-direction:column;gap:3px}
@@ -251,15 +258,19 @@ function legend(){
     $("legend").innerHTML=`<div class="ramp"><span class="lbl">Margin shift vs. ${ELECTIONS[cmp].label}</span>${rampRow("Moved toward Republicans","r")}${rampRow("Moved toward Democrats","d")}<div class="ticks"><span>0</span><span>2</span><span>5</span><span>10+ pts</span></div></div>`;
   }
 }
-function hoverCard(c){
-  const E=ELECTIONS[view], v=DATA[view][c], o=v[2]-v[0]-v[1];
+function half(k,c,role){
+  const E=ELECTIONS[k], v=DATA[k][c], o=v[2]-v[0]-v[1];
   const rows=[["d",E.D,v[1]],["r",E.R,v[0]],["o",E.O,o]].sort((a,b)=>b[2]-a[2]);
   const body=rows.map(([cl,n,x])=>`<tr><td class="cand"><span class="sw ${cl}"></span>${n}</td><td class="num">${fmt(x)}</td><td class="num">${pct(x,v[2]).toFixed(1)}%</td></tr>`).join("");
-  const m=margin(view,c), mb=margin(cmp,c), s=m-mb, bv=DATA[cmp][c];
-  const cl = x=>x>=0?"d":"r";
-  return `<h3>${c} County</h3><div class="src"><span>${E.label}</span><span class="num">${fmt(v[2])} votes</span></div>
+  const m=margin(k,c);
+  return `<div class="half"><div class="role">${role}</div><div class="src"><span>${E.label}</span><span class="num">${fmt(v[2])} votes</span></div>
   <table><thead><tr><th>Candidate</th><th>Votes</th><th>Pct</th></tr></thead><tbody>${body}</tbody></table>
-  <div class="cmp">Margin <span class="tag ${cl(m)}">${fm(m)}</span><br>${ELECTIONS[cmp].label}: <span class="tag ${cl(mb)}">${fm(mb)}</span> (${fmt(bv[2])} votes)<br>Shift: <span class="tag ${cl(s)}">${fs(s)} pts</span></div>`;
+  <div class="hm">Margin <span class="tag ${m>=0?"d":"r"}">${fm(m)}</span></div></div>`;
+}
+function hoverCard(c){
+  const m=margin(view,c), mb=margin(cmp,c), s=m-mb, cl=x=>x>=0?"d":"r";
+  return `<h3>${c} County</h3><div class="split">${half(view,c,"Showing")}${half(cmp,c,"Compared to")}</div>
+  <div class="cmp">Shift from ${ELECTIONS[cmp].label} to ${ELECTIONS[view].label}: <span class="tag ${cl(s)}">${fs(s)} pts</span></div>`;
 }
 function select(c){
   sel=c;
